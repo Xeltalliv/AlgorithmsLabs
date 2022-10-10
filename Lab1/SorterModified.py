@@ -5,30 +5,45 @@ import random
 import math
 import time
 
+cacheSize = -1
+
 class Run:
 	def __init__(self, start, length, binFile):
 		self.start = start
 		self.length = length
 		self.pos = 0
 		self.binFile = binFile
-		if length > 0:
+
+	def prepare(self):
+		if self.length > 0:
 			self.hasMore = True
-			self.value = binFile.getInt32(start)
+			self.cache = self.binFile.getInts32(self.start, min(cacheSize, self.length))
+			self.cachePos = 0
+			self.value = self.cache[0]
 		else:
 			self.hasMore = False
+			self.cache = []
+			self.cachePos = 0
 			self.value = 0
 
 	def next(self):
 		self.pos += 1
+		self.cachePos += 1
 		if(self.pos < self.length):
-			self.value = self.binFile.getInt32(self.start + self.pos)
+			if(self.cachePos >= cacheSize):
+				self.cache = self.binFile.getInts32(self.start + self.pos, min(cacheSize, self.length))
+				self.cachePos = 0
+			#print(str(len(self.cache))+" "+str(self.cachePos)+" "+str(self.pos)+" "+str(self.length))
+			self.value = self.cache[self.cachePos]
+			return self.value
 		else:
 			self.hasMore = False
+			return 0
 
-def sort(fileCount, visualize):
-	startTime = time.time()
+def sort(fileCount, runSize, visualize):
 
 	binf = BinFile("numbers", "r+b")
+	startTime = time.time()
 
 	# Створення файлів
 
@@ -47,7 +62,7 @@ def sort(fileCount, visualize):
 
 	distributions = [1] * len(inputFiles)
 	currentSize = len(inputFiles)
-	targetSize = binf.size
+	targetSize = math.ceil(binf.size / runSize)
 	totalSwitches = 0
 	while currentSize < targetSize:
 		print(distributions)
@@ -80,25 +95,7 @@ def sort(fileCount, visualize):
 	writeToFileIdx = 0
 	readPos = 0
 	runsWrittenSoFar = 0
-	while readPos < binf.size:
-		ints = binf.getInt32(readPos)
-		inputFiles[writeToFile].setInt32(writeFilePos[writeToFile], ints)
-		inputFileRuns[writeToFile].append(Run(writeFilePos[writeToFile], 1, inputFiles[writeToFile]))
-		if(visualize):
-			print("запис "+str(len(ints))+" значень в файл "+inputFiles[writeToFile].name+" "+str(distr))
-		distr[writeToFileIdx] -= 1
-		if(distr[writeToFileIdx] < 1):
-			writeToFiles.pop(writeToFileIdx)
-			distr.pop(writeToFileIdx)
-			writeToFileIdx -= 1
-
-		readPos += 1
-		writeFilePos[writeToFile] += 1
-		writeToFileIdx = (writeToFileIdx + 1) % len(writeToFiles)
-		writeToFile = writeToFiles[writeToFileIdx]
-		runsWrittenSoFar += 1
-
-	while runsWrittenSoFar < totalRuns:
+	for i in range(currentSize - targetSize):
 		inputFileRuns[writeToFile].append(Run(writeFilePos[writeToFile], 0, inputFiles[writeToFile]))
 		if(visualize):
 			print("запис пустої серії в файл "+inputFiles[writeToFile].name+" "+str(distr))
@@ -107,13 +104,32 @@ def sort(fileCount, visualize):
 			writeToFiles.pop(writeToFileIdx)
 			distr.pop(writeToFileIdx)
 			writeToFileIdx -= 1
-
-
 		if(len(writeToFiles) > 0): # Запобігти вилітам від %0 та читання поза межами
 			writeToFileIdx = (writeToFileIdx + 1) % len(writeToFiles)
 			writeToFile = writeToFiles[writeToFileIdx]
 		runsWrittenSoFar += 1
 
+	while readPos < binf.size:
+		ints = binf.getInts32(readPos, runSize)
+		ints.sort()
+		inputFiles[writeToFile].setInts32(writeFilePos[writeToFile], ints)
+		inputFileRuns[writeToFile].append(Run(writeFilePos[writeToFile], len(ints), inputFiles[writeToFile]))
+		if(visualize):
+			print("запис "+str(len(ints))+" значень в файл "+inputFiles[writeToFile].name+" "+str(distr))
+		distr[writeToFileIdx] -= 1
+		if(distr[writeToFileIdx] < 1):
+			writeToFiles.pop(writeToFileIdx)
+			distr.pop(writeToFileIdx)
+			writeToFileIdx -= 1
+
+		readPos += runSize
+		writeFilePos[writeToFile] += runSize
+		if(len(writeToFiles) > 0):
+			writeToFileIdx = (writeToFileIdx + 1) % len(writeToFiles)
+			writeToFile = writeToFiles[writeToFileIdx]
+		runsWrittenSoFar += 1
+
+	print("Початок злиття")
 
 	# Злиття
 	keepGoing = True
@@ -122,24 +138,54 @@ def sort(fileCount, visualize):
 	while keepGoing:
 		hasMore = True
 		outputStart = outputPos
-		while hasMore:
-			minI = -1
-			minVal = 9999999
-			for i in range(len(inputFiles)):
-				if(len(inputFileRuns[i]) > 0 and inputFileRuns[i][0].hasMore):
-					value = inputFileRuns[i][0].value
-					#print(" Перевіряємо значення: "+str(value))
-					if(value < minVal):
-						minVal = value
-						minI = i
-			if(minI > -1):
-				#print("Мінімум: "+str(minVal))
-				outputFile.setInt32(outputPos, minVal)
-				outputPos += 1
-				inputFileRuns[minI][0].next()
-				hasMore = True
+		cache = []
+		cachePos = outputPos
+
+
+		files = []
+		values = []
+		for i in range(len(inputFiles)):
+			if(len(inputFileRuns[i]) > 0):
+				inputFileRuns[i][0].prepare()
+				if(inputFileRuns[i][0].hasMore):
+					files.append(inputFileRuns[i][0])
+					values.append(inputFileRuns[i][0].value)
+
+		while(len(values) > 1):
+			minVal = min(values)
+			minI = values.index(minVal)
+			cache.append(minVal)
+			if(len(cache) == cacheSize):
+				outputFile.setInts32(cachePos, cache)
+				cache = []
+				cachePos = cachePos + cacheSize
+
+			run = files[minI]
+			run.pos += 1
+			run.cachePos += 1
+			if(run.pos < run.length):
+				if(run.cachePos >= cacheSize):
+					run.cache = run.binFile.getInts32(run.start + run.pos, min(cacheSize, run.length - run.pos))
+					run.cachePos = 0
+				values[minI] = run.value = run.cache[run.cachePos]
 			else:
-				hasMore = False
+				values.pop(minI)
+				files.pop(minI)
+
+		if(len(cache) > 0):
+			outputFile.setInts32(cachePos, cache)
+			cachePos += len(cache)
+
+		if(len(values) == 1):
+			run = files[0]
+			run.pos += 1
+			while(run.length - run.pos > 0):
+				ints = run.binFile.getInts32(run.start + run.pos, min(cacheSize, run.length - run.pos))
+				run.pos += cacheSize
+				outputFile.setInts32(cachePos, ints)
+				cachePos += len(ints)
+		outputPos = cachePos
+
 		#print("Немає нічого")
 		outputLength = outputPos - outputStart
 		outputFileRuns.append(Run(outputStart, outputLength, outputFile))
@@ -169,6 +215,7 @@ def sort(fileCount, visualize):
 				print(" "+inputFiles[i].name+"> "+("="*len(inputFileRuns[i])))
 			print(" "+outputFile.name+"< "+("="*len(outputFileRuns)))
 
+	print("Копіювання результату")
 
 	for i in range(outputFileRuns[0].length):
 		binf.setInt32(i, outputFile.getInt32(i))
@@ -179,9 +226,13 @@ def sort(fileCount, visualize):
 	print("На виконання пійшло "+str(time.time() - startTime)+" секунд")
 
 def main():
+	global cacheSize
 	fileCount = int(input("Кількість файлів: "))
-	visualize = (input("Показувати сортування? (т/н) ") == "т")
-	sort(fileCount, visualize)
+	runSize = int(input("Кількість чисел в серії: "))
+	cacheSize = int(input("Кількість чисел в кеші кожного файлу: "))
+	visualize = input("Показувати сортування? (т/н) ")
+	visualize = (visualize == "т" or visualize == "y")
+	sort(fileCount, runSize, visualize)
 
 if __name__ == "__main__":
 	main()
