@@ -2,22 +2,30 @@ const canvas = document.getElementById("canv");
 const ctx = canvas.getContext("2d");
 const queen = new Image(); queen.src = "../queen.png";
 
-const queens2 = [];
-const playfield = new Array(8).fill(0).map(array => new Array(8).fill(0));
-const log = [];
+let queens2 = [];
+let playfield = new Array(8).fill(0).map(array => new Array(8).fill(0));
+let log = [];
 
 let maxDepth = 6;
 let totalWrong = 0;
 let queenCount = 8;
 let fieldSize = 8;
 let delay = 0;
+let solved = false;
 
 document.getElementById("start").addEventListener("click", async function() {
+	document.getElementById("info").innerText = "";
+
 	queenCount = Math.max(document.getElementById("queen").value | 0, 2);
 	fieldSize = Math.max(document.getElementById("board").value | 0, 2);
 	maxDepth = Math.max(document.getElementById("depth").value | 0, 1);
-	delay = Math.max(document.getElementById("delay").value | 0, 0);
+	delay = Math.max(document.getElementById("delay").value, 0);
 	canvas.width = canvas.height = 44 + fieldSize * 32;
+
+	queens2 = [];
+	playfield = new Array(8).fill(0).map(array => new Array(8).fill(0));
+	log = [];
+	solved = false;
 
 	addRandomly();
 	draw(queens2);
@@ -26,31 +34,31 @@ document.getElementById("start").addEventListener("click", async function() {
 	document.getElementById("info").innerText = "Пошук шляху...";
 	let startTime = Date.now();
 
-	try {
-		let queens = copy(queens2);
-		for(let q=0; q<queenCount; q++) {
-			let x = queens[q][0];
-			let y = queens[q][1];
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i) await move(queens, q, i, y, 0, 1);
-			}
-			for(let i=0; i<fieldSize; i++) {
-				if(y !== i) await move(queens, q, x, i, 0, 2);
-			}
-			let z = y-x;
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i && z+i >= 0 && z+i < fieldSize) await move(queens, q, i, z+i, 0, 3);
-			}
-			z = y+x;
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i && z-i >= 0 && z-i < fieldSize) await move(queens, q, i, z-i, 0, 4);
-			}
+	let queens = copy(queens2);
+	for(let q=0; q<queenCount; q++) {
+		let x = queens[q][0];
+		let y = queens[q][1];
+		for(let i=0; i<fieldSize; i++) {
+			if(x !== i) await move(queens, q, i, y, 0, 1);
 		}
-	} catch(e) {
-		console.log("errored", e);
+		for(let i=0; i<fieldSize; i++) {
+			if(y !== i) await move(queens, q, x, i, 0, 2);
+		}
+		let z = y-x;
+		for(let i=0; i<fieldSize; i++) {
+			if(x !== i && z+i >= 0 && z+i < fieldSize) await move(queens, q, i, z+i, 0, 3);
+		}
+		z = y+x;
+		for(let i=0; i<fieldSize; i++) {
+			if(x !== i && z-i >= 0 && z-i < fieldSize) await move(queens, q, i, z-i, 0, 4);
+		}
 	}
-	document.getElementById("info").innerText = "Шлях знайдено за "+((Date.now() - startTime) / 1000)+" секунд";
-	await playAnimation();
+	if(solved) {
+		document.getElementById("info").innerText = "Шлях знайдено за "+((Date.now() - startTime) / 1000)+" секунд";
+		await playAnimation();
+	} else {
+		document.getElementById("info").innerText = "Шлях не знайдено";
+	}
 });
 
 function draw(queens) {
@@ -115,7 +123,6 @@ function addRandomly() {
 		}
 		totalWrong += wrong+1;
 		queens2.push([x, y, wrong+1]);
-		console.log(x, y);
 		add--;
 	}
 }
@@ -125,7 +132,7 @@ function random(a, b) {
 }
 
 async function move(queens, queen, x, y, depth, last) {
-	if(depth > maxDepth) return;
+	if(depth >= maxDepth || solved) return;
 
 	if(playfield[y][x] === 1) return;
 	let oldx = queens[queen][0];
@@ -155,7 +162,10 @@ async function move(queens, queen, x, y, depth, last) {
 	}
 	queens[queen][2] = wrong+1;
 	totalWrong += wrong+1;
-	if(totalWrong == queenCount) throw new Error("SOLVED!!!")
+	if(totalWrong == queenCount) {
+		solved = true;
+		return;
+	}
 
 	if(delay > 0) {
 		draw(queens);
@@ -189,6 +199,7 @@ async function move(queens, queen, x, y, depth, last) {
 			}
 		}
 	}
+	if(solved) return;
 	queens[queen][0] = oldx;
 	queens[queen][1] = oldy;
 	queens[queen][2] = oldw;
@@ -225,7 +236,7 @@ async function waitFrame() {
 
 async function playAnimation() {
 	console.log("animation");
-	for(let step=1; step<log.length; step++) {
+	for(let step=0; step<log.length; step++) {
 		let q = log[step][0];
 		let oldx = queens2[q][0];
 		let oldy = queens2[q][1];

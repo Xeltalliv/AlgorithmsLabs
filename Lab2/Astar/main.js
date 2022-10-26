@@ -8,6 +8,8 @@ let queenCount = 8;
 let fieldSize = 8;
 
 document.getElementById("start").addEventListener("click", async function() {
+	document.getElementById("info").innerText = "";
+
 	queenCount = Math.max(document.getElementById("queen").value | 0, 2);
 	fieldSize = Math.max(document.getElementById("board").value | 0, 2);
 	canvas.width = canvas.height = 44 + fieldSize * 32;
@@ -95,6 +97,7 @@ class State {
 }
 
 async function solve() {
+	let delay = 0;
 	while(true) {
 		let minIdx = null;
 		let minVal = Infinity;
@@ -107,8 +110,8 @@ async function solve() {
 			}
 		}
 		if(states[minIdx].makeChild(minIdx)) return true;
-		if(Math.random() < 0.01) {
-			//console.log(minVal);
+		if(++delay > 1000) {
+			delay = 0;
 			await wait(0.001);
 		}
 	}
@@ -134,11 +137,6 @@ function draw(queens) {
 		let x = queens[q][0];
 		let y = queens[q][1];
 		ctx.drawImage(queen, 22+x*32, 22+y*32);
-		/*let l = ctx.measureText(queens[q][2]).width/2;
-		ctx.fillStyle = "#000000";
-		ctx.fillText(queens[q][2], 38-l+x*32, 46+y*32);
-		ctx.fillStyle = "#ff0000";
-		ctx.fillText(queens[q][2], 38-l+x*32, 44+y*32);*/
 	}
 	ctx.fillStyle = "black";
 	let fs32 = fieldSize*32;
@@ -194,8 +192,6 @@ function addHitfield(hitfield, x, y, val) {
 function random(a, b) {
 	return a + Math.floor(Math.random() * (b-a+1));
 }
-
-let delay = 0.1;
 
 function copy(arr) {
 	return arr.map(e => e.slice());
