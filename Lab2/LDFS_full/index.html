@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Lab2</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="style.css" rel="stylesheet">
+		<script src="main.js" defer></script>
+	</head>
+	<body>
+		<label for="board">Розмір дошки</label><input type="number" id="board" value="8" min="2" max="8"><br>
+		<label for="queen">Кількість ферзів</label><input type="number" id="queen" value="8" min="2" max="8"><br>
+		<label for="depth">Обмеження глибини</label><input type="number" id="depth" value="10" min="1" max="99"><br>
+		<label for="delay">Уповільнення</label><input type="number" id="delay" value="0" min="0" max="10"><br>
+		<button id="start">Пуск</button><span id="info"></span><br>
+		<canvas width=300 height=300 id="canv"></canvas>
+	</body>
+</html>

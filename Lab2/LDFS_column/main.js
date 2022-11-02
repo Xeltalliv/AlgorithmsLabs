@@ -6,7 +6,7 @@ let queens2 = [];
 let playfield = new Array(8).fill(0).map(array => new Array(8).fill(0));
 let log = [];
 
-let maxDepth = 6;
+let maxDepth = 32;
 let totalWrong = 0;
 let queenCount = 8;
 let fieldSize = 8;
@@ -32,6 +32,7 @@ document.getElementById("start").addEventListener("click", async function() {
 	await wait(0.5);
 
 	document.getElementById("info").innerText = "Пошук шляху...";
+	await waitFrame();
 	let startTime = Date.now();
 
 	let queens = copy(queens2);
@@ -39,18 +40,7 @@ document.getElementById("start").addEventListener("click", async function() {
 		let x = queens[q][0];
 		let y = queens[q][1];
 		for(let i=0; i<fieldSize; i++) {
-			if(x !== i) await move(queens, q, i, y, 0, 1);
-		}
-		for(let i=0; i<fieldSize; i++) {
 			if(y !== i) await move(queens, q, x, i, 0, 2);
-		}
-		let z = y-x;
-		for(let i=0; i<fieldSize; i++) {
-			if(x !== i && z+i >= 0 && z+i < fieldSize) await move(queens, q, i, z+i, 0, 3);
-		}
-		z = y+x;
-		for(let i=0; i<fieldSize; i++) {
-			if(x !== i && z-i >= 0 && z-i < fieldSize) await move(queens, q, i, z-i, 0, 4);
 		}
 	}
 	if(solved) {
@@ -102,13 +92,8 @@ function draw(queens) {
 function addRandomly() {
 	let add = queenCount;
 	while(add > 0) {
-		let x = random(0, fieldSize-1);
+		let x = queenCount - add;
 		let y = random(0, fieldSize-1);
-		let skip = false;
-		for(let q=0; q<queens2.length; q++) {
-			if(queens2[q][0] === x && queens2[q][1] === y) skip = true;
-		}
-		if(skip) continue;
 		playfield[y][x] = 1;
 
 		let wrong = 0;
@@ -176,26 +161,9 @@ async function move(queens, queen, x, y, depth, last) {
 	for(let q=0; q<queenCount; q++) {
 		let x = queens[q][0];
 		let y = queens[q][1];
-		if(q !== queen || last !== 1) {
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i) await move(queens, q, i, y, depth, 1);
-			}
-		}
 		if(q !== queen || last !== 2) {
 			for(let i=0; i<fieldSize; i++) {
 				if(y !== i) await move(queens, q, x, i, depth, 2);
-			}
-		}
-		if(q !== queen || last !== 3) {
-			let z = y-x;
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i && z+i >= 0 && z+i < fieldSize) await move(queens, q, i, z+i, depth, 3);
-			}
-		}
-		if(q !== queen || last !== 4) {
-			let z = y+x;
-			for(let i=0; i<fieldSize; i++) {
-				if(x !== i && z-i >= 0 && z-i < fieldSize) await move(queens, q, i, z-i, depth, 4);
 			}
 		}
 	}
