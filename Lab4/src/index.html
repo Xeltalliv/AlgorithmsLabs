@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>L4V8</title>
+		<meta charset="UTF-8">
+		<script src="main.js" defer></script>
+	</head>
+	<body style="display:flex; margin:0">
+		<canvas id="canvas" width="700" height="700" style="height: 100vh;"></canvas>
+		<div style="display:flex; flex-direction: column; padding: 10px;">
+			<table>
+				<tr><td>Вершин</td><td><input type="number" id="vertexCount" value="200"></td></tr>
+				<tr><td>A</td><td><input type="number" id="alpha" value="3"></td></tr>
+				<tr><td>B</td><td><input type="number" id="beta" value="2"></td></tr>
+				<tr><td>P</td><td><input type="number" id="ro" value="0.3"></td></tr>
+				<tr><td>M</td><td><input type="number" id="antCount" value="25"></td></tr>
+				<tr><td>Lmin</td><td><input type="number" id="Lmin" valus="0" readonly></td></tr>
+			</table>
+			<button id="init">Згенерувати</button>
+			<button id="step">Крок</button>
+			<button id="solve">Вирішити</button>
+		</div>
+	</body>
+</html>
