@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>L5V8</title>
+		<meta charset="UTF-8">
+		<script src="main.js" defer></script>
+	</head>
+	<body style="display:flex; margin:0">
+		<canvas id="canvas" width="700" height="700" style="height: 100vh;"></canvas>
+		<div style="display:flex; flex-direction: column; padding: 10px;">
+			<table>
+				<tr><td>Вершин</td><td><input type="number" id="vertexCount" value="100"></td></tr>
+				<tr><td>α</td><td><input type="number" id="alpha" value="1"></td></tr>
+				<tr><td>β</td><td><input type="number" id="beta" value="2"></td></tr>
+				<tr><td>P</td><td><input type="number" id="ro" value="0.1"></td></tr>
+				<tr><td>M</td><td><input type="number" id="antCount" value="20"></td></tr>
+				<tr><td>M<sub>елітн</sub></td><td><input type="number" id="eliteAntRatio" value="0"></td></tr>
+				<tr><td>L<sub>min</sub></td><td><input type="number" id="Lmin" value="1"></td></tr>
+				<tr><td>Ферамон</td><td><input type="number" id="feramone" value="1"></td></tr>
+				<tr><td>Довжина відхиленнь</td><td><input type="number" id="scatter" value="1"></td></tr>
+				<tr><td>Шанс відхиленнь</td><td><input type="number" id="chance" value="0.5"></td></tr>
+				<tr><td>Візуалізація</td><td><input type="checkbox" id="visualize" checked></td></tr>
+				<tr><td>Замірів</td><td><input type="number" id="tests" value="25"></td></tr>
+			</table>
+			<button id="test">Заміряти</button>
+			<span id="state"></span>
+		</div>
+	</body>
+</html>
