@@ -1,0 +1,39 @@
+.hidden {
+	display: none;
+}
+.red {
+	color: #f22;
+	font-weight: bold;
+}
+table {
+	border: 1px solid #444;
+	border-collapse: collapse;
+	width: 100%;
+}
+th, td {
+	border: 1px solid #444;
+	padding: 5px;
+}
+th {
+	background: #888;
+}
+td {
+	background: #aaa;
+}
+button {
+	padding: 5px;
+}
+body {
+	font-family: sans-serif;
+}
+html, body {
+	width: 100%;
+	margin: 0;
+	text-align:center;
+}
+.center {
+	display: inline-block;
+}
+.bold {
+	font-weight: bold;
+}

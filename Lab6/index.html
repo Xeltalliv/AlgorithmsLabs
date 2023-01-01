@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>21</title>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="style.css">
+		<script src="main.js" defer></script>
+		<script src="anim.js" defer></script>
+	</head>
+	<body>
+		<div class="center">
+		<h1>Двадцять одно</h1>
+		<div id="aiSelect">
+			<h3>Оберіть складність</h3>
+			<button id="ai4">Проста (занадто обережний)</button><br>
+			<button id="ai3">Середня (занадто обережний)</button><br>
+			<button id="ai2">Складна</button><br>
+			<button id="ai1">Середня (занадто ризиковий)</button><br>
+			<button id="ai0">Проста (занадто ризиковий)</button>
+		</div>
+		<div id="game" class="hidden">
+			<table id="table">
+				<tr>
+					<th>Гравець</th>
+					<th>Сума чисел</th>
+					<th>Фішок</th>
+				</tr>
+				<tr>
+					<td>Ви</td>
+					<td>0</td>
+					<td>10</td>
+				</tr>
+				<tr>
+					<td>Комп'ютер 1</td>
+					<td>0</td>
+					<td>10</td>
+				</tr>
+			</table>
+			<span id="pile" class="bold"></span>
+			<br>
+			<button id="throw" disabled>Кинути</button>
+			<button id="next" disabled>Далі</button>
+			<br>
+			<canvas id="canvas" width="400" height="400"></canvas>
+		</div>
+		</div>
+	</body>
+</html>
